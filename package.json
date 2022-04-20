@@ -4,7 +4,10 @@
   "description": "",
   "main": "app.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "server": "ts-node app.ts",
+    "frontend-react": "cd D:/UNI/cardapp/frontend/react/cardapp && npm start",
+    "dev-react": "concurrently \"npm run server\" \"npm run frontend-react\" ",
+    "compile-run": "tsc backend/app.ts && node app.js"
   },
   "repository": {
     "type": "git",
@@ -18,9 +21,20 @@
   },
   "homepage": "https://github.com/Georgi06/cardApp#readme",
   "devDependencies": {
+    "@types/bcrypt": "^5.0.0",
+    "@types/express": "^4.17.13",
+    "@types/jsonwebtoken": "^8.5.8",
+    "@types/mysql": "^2.15.21",
+    "@types/node": "^17.0.24",
+    "axios": "^0.26.1",
     "concurrently": "^7.1.0",
     "cors": "^2.8.5",
     "express": "^4.17.3",
+    "jsonwebtoken": "^8.5.1",
     "mysql2": "^2.3.3"
+  },
+  "dependencies": {
+    "bcrypt": "^5.0.1"
   }
 }
+
