@@ -5,7 +5,7 @@
   "main": "app.js",
   "scripts": {
     "server": "ts-node app.ts",
-    "frontend-react": "cd ../ && cdfrontend/react/cardapp && npm start",
+    "frontend-react": "cd ../ && cd frontend/react/cardapp && npm start",
     "dev-react": "concurrently \"npm run server\" \"npm run frontend-react\" ",
     "compile-run": "tsc backend/app.ts && node app.js"
   },
