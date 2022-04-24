@@ -2,7 +2,9 @@ import {promises} from "fs";
 import {User} from "../types/User";
 import {UserDataInput} from "../types/UserDataInput";
 import {UpdateUserData} from "../types/UpdateUserData";
+import {Request, Response} from "express";
 const mysql = require('mysql2');
+const bcrypt = require('bcrypt');
 
 export class UserModel {
 
@@ -17,6 +19,15 @@ export class UserModel {
     async getUsers(): Promise<User[]>{
         const [rows] = await this.conn.query("SELECT * FROM users");
         return rows;
+
+    }
+    async getLoginUsername(): Promise <string>{
+        const username = await this.conn.query("SELECT username FROM users");
+        return username;
+    }
+    async getLoginPassword(): Promise <string>{
+        const password = await this.conn.query("SELECT password FROM users");
+        return password;
     }
 
     async findUser(id : number): Promise<User[]>{
@@ -34,8 +45,31 @@ export class UserModel {
             (userDataInput.last_name) ? userDataInput.last_name : null
         ]
         await this.conn.execute("INSERT INTO users (username, password, email, first_name, last_name ) VALUES (?,?,?,?,?)", insertDataObject)
+
         return true;
     }
+
+    async createHashUser (req: Request, res: Response,userDataInput: UserDataInput) {
+        const passwordForHash = userDataInput.password;
+
+        bcrypt.hash(passwordForHash, 10, (hashError, hash) => {
+            if (hashError) {
+                return res.status(401).json({
+                    message: hashError.message,
+                    error: hashError
+                });
+            }
+        });
+
+        const insertDataObject = [
+            userDataInput.username,
+
+            (userDataInput.email) ? userDataInput.email : null,
+            (userDataInput.first_name) ? userDataInput.first_name : null,
+            (userDataInput.last_name) ? userDataInput.last_name : null
+        ]
+        await this.conn.execute("INSERT INTO users (username, password, email, first_name, last_name ) VALUES (?,hash,?,?,?)", insertDataObject)
+    };
 
 
     public async updateUser(id : number, updateUserData: UpdateUserData): Promise<boolean>{
