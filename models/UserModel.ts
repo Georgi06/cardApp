@@ -63,7 +63,7 @@ export class UserModel {
 
         const insertDataObject = [
             userDataInput.username,
-
+            userDataInput.password,
             (userDataInput.email) ? userDataInput.email : null,
             (userDataInput.first_name) ? userDataInput.first_name : null,
             (userDataInput.last_name) ? userDataInput.last_name : null

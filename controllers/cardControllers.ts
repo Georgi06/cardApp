@@ -3,6 +3,7 @@ import  {CardModel} from "../models/CardModel";
 const bcrypt = require('bcrypt');
 import {Card} from "../types/Card";
 import {UpdateCardData} from "../types/UpdateCardData";
+import {UserModel} from "../models/UserModel";
 
 const saltRounds = 10;
 
@@ -10,7 +11,8 @@ const saltRounds = 10;
 export const createCard= async (req: Request, res: Response) => {
     let CardData: Card = req.body;
 
-    let newCard = await new CardModel().createCard(CardData);
+    const newCard = new CardModel();
+    await newCard.createCard(CardData);
 
     res.send({
         status: 200,

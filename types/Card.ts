@@ -6,5 +6,5 @@ export type Card = {
     holder_first_name: string,
     holder_last_name: string,
     valid_date: string,
-    ccv2: number,
+    cvv2: string
 }

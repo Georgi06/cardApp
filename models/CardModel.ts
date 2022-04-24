@@ -33,9 +33,11 @@ export class CardModel {
             cardDataInput.holder_first_name,
             cardDataInput.holder_last_name,
             cardDataInput.valid_date,
-            cardDataInput.ccv2,
+            cardDataInput.cvv2
         ]
-        await this.conn.execute("INSERT INTO users (username, password, email, first_name, last_name ) VALUES (?,?,?,?,?)", insertDataObject)
+
+        console.log(insertDataObject)
+        await this.conn.execute("INSERT INTO cards (card_number, holder_first_name, holder_last_name, valid_date, cvv2 ) VALUES (?,?,?,?,?)", insertDataObject)
 
         return true;
     }
