@@ -36,8 +36,11 @@ var __generator = (this && this.__generator) || function (thisArg, body) {
     }
 };
 exports.__esModule = true;
-exports.login = exports.getUser = exports.deleteUser = exports.updateUser = exports.getAllUsers = exports.createUser = void 0;
-var userModel_1 = require("../models/userModel");
+exports.Login = exports.LoginToken = exports.validateToken = exports.deleteUser = exports.updateUser = exports.getUser = exports.getAllUsers = exports.createUser = void 0;
+var UserModel_1 = require("../models/UserModel");
+var signJwt_1 = require("../signJwt");
+var bcrypt = require('bcrypt');
+var saltRounds = 10;
 //create
 var createUser = function (req, res) { return __awaiter(void 0, void 0, void 0, function () {
     var userData, userModel;
@@ -57,7 +60,7 @@ var createUser = function (req, res) { return __awaiter(void 0, void 0, void 0, 
                             message: "No password"
                         })];
                 }
-                userModel = new userModel_1.UserModel();
+                userModel = new UserModel_1.UserModel();
                 return [4 /*yield*/, userModel.createUser(userData)];
             case 1:
                 _a.sent();
@@ -75,7 +78,7 @@ var getAllUsers = function (req, res) { return __awaiter(void 0, void 0, void 0,
     var users;
     return __generator(this, function (_a) {
         switch (_a.label) {
-            case 0: return [4 /*yield*/, new userModel_1.UserModel().getUsers()];
+            case 0: return [4 /*yield*/, new UserModel_1.UserModel().getUsers()];
             case 1:
                 users = _a.sent();
                 res.send(users);
@@ -84,6 +87,23 @@ var getAllUsers = function (req, res) { return __awaiter(void 0, void 0, void 0,
     });
 }); };
 exports.getAllUsers = getAllUsers;
+var getUser = function (req, res) { return __awaiter(void 0, void 0, void 0, function () {
+    var id, userModel, user;
+    return __generator(this, function (_a) {
+        switch (_a.label) {
+            case 0:
+                id = parseInt(req.params.id);
+                userModel = new UserModel_1.UserModel();
+                return [4 /*yield*/, userModel.findUser(id)];
+            case 1:
+                user = _a.sent();
+                console.log(user);
+                res.send(user);
+                return [2 /*return*/];
+        }
+    });
+}); };
+exports.getUser = getUser;
 //update
 var updateUser = function (req, res) { return __awaiter(void 0, void 0, void 0, function () {
     var id, updateUserData, userModel;
@@ -92,7 +112,7 @@ var updateUser = function (req, res) { return __awaiter(void 0, void 0, void 0, 
             case 0:
                 id = Number(req.params.id);
                 updateUserData = req.body;
-                userModel = new userModel_1.UserModel();
+                userModel = new UserModel_1.UserModel();
                 return [4 /*yield*/, userModel.updateUser(id, updateUserData)];
             case 1:
                 _a.sent();
@@ -112,7 +132,7 @@ var deleteUser = function (req, res) { return __awaiter(void 0, void 0, void 0, 
         switch (_a.label) {
             case 0:
                 id = Number(req.params.id);
-                userModel = new userModel_1.UserModel();
+                userModel = new UserModel_1.UserModel();
                 return [4 /*yield*/, userModel.deleteUser(id)];
             case 1:
                 _a.sent();
@@ -125,30 +145,86 @@ var deleteUser = function (req, res) { return __awaiter(void 0, void 0, void 0, 
     });
 }); };
 exports.deleteUser = deleteUser;
-var getUser = function (req, res) { return __awaiter(void 0, void 0, void 0, function () {
-    var id, userModel, user;
-    return __generator(this, function (_a) {
-        switch (_a.label) {
+var validateToken = function (req, res) {
+    return res.status(200).json({
+        message: "Authorized"
+    });
+};
+exports.validateToken = validateToken;
+var LoginToken = function (req, res) { return __awaiter(void 0, void 0, void 0, function () {
+    var _a, username, password, users;
+    return __generator(this, function (_b) {
+        switch (_b.label) {
             case 0:
-                id = parseInt(req.params.id);
-                userModel = new userModel_1.UserModel();
-                return [4 /*yield*/, userModel.findUser(id)];
+                _a = req.body, username = _a.username, password = _a.password;
+                return [4 /*yield*/, new UserModel_1.UserModel().getUsers()];
             case 1:
-                user = _a.sent();
-                console.log(user);
-                res.send(user);
+                users = _b.sent();
+                bcrypt.compare(password, users[0].password, function (error, result) {
+                    if (error) {
+                        return res.status(401).json({
+                            message: 'Password Mismatch'
+                        });
+                    }
+                    else if (result) {
+                        (0, signJwt_1.signJWT)(users[0], function (_error, token) {
+                            if (_error) {
+                                return res.status(401).json({
+                                    message: 'Unable to Sign JWT',
+                                    error: _error
+                                });
+                            }
+                            else if (token) {
+                                return res.status(200).json({
+                                    message: 'Auth Successful',
+                                    token: token,
+                                    user: users[0]
+                                });
+                            }
+                        });
+                    }
+                });
                 return [2 /*return*/];
         }
     });
 }); };
-exports.getUser = getUser;
-var login = function (req, res) {
-    var loginRequest = req.query;
-    if (!loginRequest.username || !loginRequest.password) {
-        return res.send({
-            status: 400,
-            message: "Username or password not provided"
-        });
-    }
-};
-exports.login = login;
+exports.LoginToken = LoginToken;
+var Login = function (req, res) { return __awaiter(void 0, void 0, void 0, function () {
+    var userData, obj, users, foundUser, json;
+    return __generator(this, function (_a) {
+        switch (_a.label) {
+            case 0:
+                userData = req.body;
+                obj = {};
+                return [4 /*yield*/, new UserModel_1.UserModel().getUsers()];
+            case 1:
+                users = _a.sent();
+                foundUser = users.find(function (user) { return user.username == userData.username || user.password == userData.password; });
+                json = JSON.stringify(obj);
+                if (!foundUser) {
+                    return [2 /*return*/, res.send({
+                            status: 400,
+                            message: "No such user"
+                        })];
+                }
+                if (foundUser && foundUser.username != userData.username) {
+                    return [2 /*return*/, res.send({
+                            status: 400,
+                            message: "Incorrect username"
+                        })];
+                }
+                if (foundUser && foundUser.password != userData.password) {
+                    return [2 /*return*/, res.send({
+                            status: 400,
+                            message: "Incorrect password"
+                        })];
+                }
+                res.send({
+                    status: 200,
+                    message: "Logged in"
+                });
+                return [2 /*return*/];
+        }
+    });
+}); };
+exports.Login = Login;

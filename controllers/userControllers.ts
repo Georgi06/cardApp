@@ -125,21 +125,25 @@ const saltRounds = 10;
         //let dbusername = await new UserModel().getLoginUsername();
         //let dbpassword = await new UserModel().getLoginPassword();
 
-        users.forEach(item => obj[item.username] = item.password);
+        //users.forEach(item => obj[item.username] = item.password);
+
+        const foundUser = users.find(user => user.username == userData.username || user.password == userData.password)
         let json = JSON.stringify(obj);
 
-        console.log(obj);
-        console.log(userData);
-        console.log(users);
+        if(!foundUser) {
+            return res.send({
+                status: 400,
+                message: "No such user"
+            })
+        }
 
-
-        if (userData != obj) {
+        if (foundUser && foundUser.username != userData.username) {
             return res.send({
                 status: 400,
                 message: "Incorrect username"
             })
         }
-        if (userData != obj) {
+        if (foundUser && foundUser.password != userData.password) {
             return res.send({
                 status: 400,
                 message: "Incorrect password"

@@ -38,6 +38,7 @@ var __generator = (this && this.__generator) || function (thisArg, body) {
 exports.__esModule = true;
 exports.UserModel = void 0;
 var mysql = require('mysql2');
+var bcrypt = require('bcrypt');
 var UserModel = /** @class */ (function () {
     function UserModel() {
         var pool = mysql.createPool({ host: 'localhost', user: 'root', database: 'cardapp' });
@@ -52,6 +53,32 @@ var UserModel = /** @class */ (function () {
                     case 1:
                         rows = (_a.sent())[0];
                         return [2 /*return*/, rows];
+                }
+            });
+        });
+    };
+    UserModel.prototype.getLoginUsername = function () {
+        return __awaiter(this, void 0, void 0, function () {
+            var username;
+            return __generator(this, function (_a) {
+                switch (_a.label) {
+                    case 0: return [4 /*yield*/, this.conn.query("SELECT username FROM users")];
+                    case 1:
+                        username = _a.sent();
+                        return [2 /*return*/, username];
+                }
+            });
+        });
+    };
+    UserModel.prototype.getLoginPassword = function () {
+        return __awaiter(this, void 0, void 0, function () {
+            var password;
+            return __generator(this, function (_a) {
+                switch (_a.label) {
+                    case 0: return [4 /*yield*/, this.conn.query("SELECT password FROM users")];
+                    case 1:
+                        password = _a.sent();
+                        return [2 /*return*/, password];
                 }
             });
         });
@@ -86,6 +113,37 @@ var UserModel = /** @class */ (function () {
             });
         });
     };
+    UserModel.prototype.createHashUser = function (req, res, userDataInput) {
+        return __awaiter(this, void 0, void 0, function () {
+            var passwordForHash, insertDataObject;
+            return __generator(this, function (_a) {
+                switch (_a.label) {
+                    case 0:
+                        passwordForHash = userDataInput.password;
+                        bcrypt.hash(passwordForHash, 10, function (hashError, hash) {
+                            if (hashError) {
+                                return res.status(401).json({
+                                    message: hashError.message,
+                                    error: hashError
+                                });
+                            }
+                        });
+                        insertDataObject = [
+                            userDataInput.username,
+                            userDataInput.password,
+                            (userDataInput.email) ? userDataInput.email : null,
+                            (userDataInput.first_name) ? userDataInput.first_name : null,
+                            (userDataInput.last_name) ? userDataInput.last_name : null
+                        ];
+                        return [4 /*yield*/, this.conn.execute("INSERT INTO users (username, password, email, first_name, last_name ) VALUES (?,hash,?,?,?)", insertDataObject)];
+                    case 1:
+                        _a.sent();
+                        return [2 /*return*/];
+                }
+            });
+        });
+    };
+    ;
     UserModel.prototype.updateUser = function (id, updateUserData) {
         return __awaiter(this, void 0, void 0, function () {
             var updateUserDataArray, setStatement, preparedStatementData, i;

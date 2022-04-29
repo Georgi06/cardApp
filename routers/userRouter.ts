@@ -8,7 +8,7 @@ userRoutes.get("/users", getAllUsers);
 userRoutes.put("/users/:id", updateUser);
 userRoutes.delete("/users/:id", deleteUser);
 userRoutes.get("/users/:id", getUser);
-userRoutes.post("/login/:username/:password", Login);
+userRoutes.post("/login", Login);
 
 
 
