@@ -36,6 +36,12 @@
     "mysql2": "^2.3.3"
   },
   "dependencies": {
-    "bcrypt": "^5.0.1"
+    "@types/express-jwt": "^6.0.4",
+    "@types/react": "^18.0.8",
+    "bcrypt": "^5.0.1",
+    "express-jwt": "^7.5.2",
+    "formik": "^2.2.9",
+    "typescript": "^4.6.4",
+    "yup": "^0.32.11"
   }
 }

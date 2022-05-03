@@ -19,4 +19,17 @@ app.use("/", cardRoutes);
 app.listen(port, () => {
     console.log(`App listening on port ${port}`)
 })
+/*
+Database site
+https://www.freemysqlhosting.net/account/
+https://www.phpmyadmin.co/index.php
+ */
 
+/*
+Database host----------
+Server: sql11.freemysqlhosting.net
+Name: sql11489599
+Username: sql11489599
+Password: 2fsq3beaJr
+Port number: 3306
+ */
