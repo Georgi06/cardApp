@@ -11,15 +11,15 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/Georgi06/cardApp.git"
+    "url": "git+https://github.com/Georgi06/CardAppNew"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
   "bugs": {
-    "url": "https://github.com/Georgi06/cardApp/issues"
+    "url": "https://github.com/Georgi06/CardAppNew"
   },
-  "homepage": "https://github.com/Georgi06/cardApp#readme",
+  "homepage": "https://github.com/Georgi06/CardAppNew",
   "devDependencies": {
     "@types/bcrypt": "^5.0.0",
     "@types/body-parser": "^1.19.2",
