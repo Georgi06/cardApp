@@ -8,7 +8,7 @@ export const authenticateToken =(req:Request, res:Response, next:NextFunction) =
 
     if (token == null) return res.sendStatus(401)
 
-    jwt.verify(token, process.env.tokenSecret as string, (err: any, user: any) => {
+    jwt.verify(token, 'abc123', (err: any, user: any) => {
         console.log(err)
 
         if (err) return res.sendStatus(403)

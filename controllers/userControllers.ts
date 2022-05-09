@@ -16,6 +16,7 @@ const saltRounds = 10;
     //create
     export const createUser= async (req: Request, res: Response) => {
     let userData: UserDataInput = req.body;
+        console.log(userData);
 
         if (!userData.username) {
             return res.send({

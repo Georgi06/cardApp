@@ -48,6 +48,7 @@ var createUser = function (req, res) { return __awaiter(void 0, void 0, void 0, 
         switch (_a.label) {
             case 0:
                 userData = req.body;
+                console.log(userData);
                 if (!userData.username) {
                     return [2 /*return*/, res.send({
                             status: 400,
