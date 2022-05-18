@@ -3,17 +3,14 @@ import {NextFunction, Request,Response} from "express";
 const jwt = require('jsonwebtoken');
 
 export const authenticateToken =(req:Request, res:Response, next:NextFunction) => {
-    const authHeader = req.headers['authorization']
-    const token = authHeader && authHeader.split(' ')[1]
+    try {
+        const token = req.header("x-auth-token");
+        if (!token) return res.status(403).send("Access denied.");
 
-    if (token == null) return res.sendStatus(401)
-
-    jwt.verify(token, 'abc123', (err: any, user: any) => {
-        console.log(err)
-
-        if (err) return res.sendStatus(403)
-
-
-        next()
-    })
+        const decoded = jwt.verify(token, 'abc123');
+        req.user = decoded;
+        next();
+    } catch (error) {
+        res.status(400).send("Invalid token");
+    }
 }

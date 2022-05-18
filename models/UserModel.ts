@@ -1,8 +1,7 @@
-import {promises} from "fs";
 import {User} from "../types/User";
 import {UserDataInput} from "../types/UserDataInput";
 import {UpdateUserData} from "../types/UpdateUserData";
-import {Request, Response} from "express";
+
 const mysql = require('mysql2');
 const bcrypt = require('bcrypt');
 
@@ -21,55 +20,68 @@ export class UserModel {
         return rows;
 
     }
-    async getLoginUsername(): Promise <string>{
-        const username = await this.conn.query("SELECT username FROM users");
-        return username;
-    }
-    async getLoginPassword(): Promise <string>{
-        const password = await this.conn.query("SELECT password FROM users");
-        return password;
-    }
 
     async findUser(id : number): Promise<User[]>{
         const [rows] = this.conn.execute(`SELECT * FROM users WHERE id = ?`, [id]);
         return rows;
 
     }
+    async getUserCard(id : number): Promise<User[]>{
+        const [rows] = this.conn.execute(`SELECT * FROM users JOIN cards ON users.first_name = cards.holder_first_name`, [id]);
+        return rows;
+
+    }
 
     async createUser(userDataInput: UserDataInput): Promise<boolean>{
+        const userRole=2;
         const insertDataObject = [
             userDataInput.username,
             userDataInput.password,
             (userDataInput.email) ? userDataInput.email : null,
             (userDataInput.first_name) ? userDataInput.first_name : null,
-            (userDataInput.last_name) ? userDataInput.last_name : null
+            (userDataInput.last_name) ? userDataInput.last_name : null,
+            (userRole) ? userRole : null
         ]
-        await this.conn.execute("INSERT INTO users (username, password, email, first_name, last_name ) VALUES (?,?,?,?,?)", insertDataObject)
+
+        await this.conn.execute("INSERT INTO users (username, password, email, first_name, last_name, role) VALUES (?,?,?,?,?,?)", insertDataObject)
 
         return true;
     }
 
-    async createHashUser (req: Request, res: Response,userDataInput: UserDataInput) {
-        const passwordForHash = userDataInput.password;
 
-        bcrypt.hash(passwordForHash, 10, (hashError, hash) => {
-            if (hashError) {
-                return res.status(401).json({
-                    message: hashError.message,
-                    error: hashError
-                });
-            }
-        });
+
+    async createHashUser(userDataInput: UserDataInput): Promise<boolean>{
+        const userRole = 2;  //role = user
+        const passwordForHash = userDataInput.password.toString();
+        const salt = bcrypt.genSalt(10); // 10 salt rounds
+       let hashedPass = await bcrypt.hash(passwordForHash, parseInt(salt));
+
+
+        // bcrypt.genSalt(this.saltRounds, function(err, salt) {
+        //     // returns salt
+        //    bcrypt.hash(passwordForHash, salt, function(err, hash) {
+        //         // returns hash
+        //        password = hash;
+        //        console.log(hash);
+        //     });
+        // });
+
 
         const insertDataObject = [
             userDataInput.username,
-            userDataInput.password,
+            hashedPass,
             (userDataInput.email) ? userDataInput.email : null,
             (userDataInput.first_name) ? userDataInput.first_name : null,
-            (userDataInput.last_name) ? userDataInput.last_name : null
+            (userDataInput.last_name) ? userDataInput.last_name : null,
+            (userRole) ? userRole : null
         ]
-        await this.conn.execute("INSERT INTO users (username, password, email, first_name, last_name ) VALUES (?,hash,?,?,?)", insertDataObject)
-    };
+
+        console.log(insertDataObject)
+
+        await this.conn.execute("INSERT INTO users (username, password, email, first_name, last_name, role) VALUES (?,?,?,?,?,?)", insertDataObject)
+
+        return true;
+    }
 
 
     public async updateUser(id : number, updateUserData: UpdateUserData): Promise<boolean>{
@@ -87,11 +99,23 @@ export class UserModel {
         return true;
     }
 
-     async deleteUser(id: number): Promise<boolean> {
-        await this.conn.execute("DELETE FROM users WHERE id = ?", [id])
+    public async updatePassword(username : string, updateUserData: UpdateUserData): Promise<boolean>{
+        const passwordForHash = updateUserData.password.toString();
+        const salt = bcrypt.genSalt(10); // 10 salt rounds
+        let hashedPass = await bcrypt.hash(passwordForHash, parseInt(salt));
+
+
+        await this.conn.execute(`UPDATE users SET password = '${hashedPass}' WHERE users.username = '${username}'`)
+        return true;
+    }
+
+     async deleteUser(username: string): Promise<boolean> {
+        await this.conn.execute("DELETE FROM users WHERE username = ?", [username])
 
         return true;
     }
 
 
 }
+
+

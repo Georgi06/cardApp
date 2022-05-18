@@ -36,7 +36,7 @@ var __generator = (this && this.__generator) || function (thisArg, body) {
     }
 };
 exports.__esModule = true;
-exports.Login = exports.deleteUser = exports.updateUser = exports.getUser = exports.getAllUsers = exports.createUser = void 0;
+exports.Login = exports.deleteUser = exports.updatePassword = exports.updateUser = exports.getUser = exports.getAllUsers = exports.createUser = void 0;
 var UserModel_1 = require("../models/UserModel");
 var bcrypt = require('bcrypt');
 var jwt = require('jsonwebtoken');
@@ -48,7 +48,6 @@ var createUser = function (req, res) { return __awaiter(void 0, void 0, void 0, 
         switch (_a.label) {
             case 0:
                 userData = req.body;
-                console.log(userData);
                 if (!userData.username) {
                     return [2 /*return*/, res.send({
                             status: 400,
@@ -62,7 +61,7 @@ var createUser = function (req, res) { return __awaiter(void 0, void 0, void 0, 
                         })];
                 }
                 userModel = new UserModel_1.UserModel();
-                return [4 /*yield*/, userModel.createUser(userData)];
+                return [4 /*yield*/, userModel.createHashUser(userData)];
             case 1:
                 _a.sent();
                 res.send({
@@ -126,59 +125,49 @@ var updateUser = function (req, res) { return __awaiter(void 0, void 0, void 0, 
     });
 }); };
 exports.updateUser = updateUser;
-//delete
-var deleteUser = function (req, res) { return __awaiter(void 0, void 0, void 0, function () {
-    var id, userModel;
+var updatePassword = function (req, res) { return __awaiter(void 0, void 0, void 0, function () {
+    var username, updateUserData, userModel;
     return __generator(this, function (_a) {
         switch (_a.label) {
             case 0:
-                id = Number(req.params.id);
+                username = req.params.username;
+                updateUserData = req.body;
                 userModel = new UserModel_1.UserModel();
-                return [4 /*yield*/, userModel.deleteUser(id)];
+                return [4 /*yield*/, userModel.updatePassword(username, updateUserData)];
+            case 1:
+                _a.sent();
+                console.log(username);
+                res.send({
+                    status: 200,
+                    message: "User with username:".concat(username, " updated")
+                });
+                return [2 /*return*/];
+        }
+    });
+}); };
+exports.updatePassword = updatePassword;
+//delete
+var deleteUser = function (req, res) { return __awaiter(void 0, void 0, void 0, function () {
+    var username, userModel;
+    return __generator(this, function (_a) {
+        switch (_a.label) {
+            case 0:
+                username = req.params.username;
+                userModel = new UserModel_1.UserModel();
+                return [4 /*yield*/, userModel.deleteUser(username)];
             case 1:
                 _a.sent();
                 res.send({
                     status: 200,
-                    message: "User with id: ".concat(id, " was deleted")
+                    message: "User with username:".concat(username, " was deleted")
                 });
                 return [2 /*return*/];
         }
     });
 }); };
 exports.deleteUser = deleteUser;
-// export const LoginToken = async (req:Request,res:Response) => {
-//     let { username, password } = req.body;
-//     let users: User[] = await new UserModel().getUsers();
-//
-//     bcrypt.compare(password, users[0].password, (error, result) => {
-//         if (error) {
-//             return res.status(401).json({
-//                 message: 'Password Mismatch'
-//             });
-//         } else if (result) {
-//             signJWT(users[0], (_error, token) => {
-//                 if (_error) {
-//                     return res.status(401).json({
-//                         message: 'Unable to Sign JWT',
-//                         error: _error
-//                     });
-//                 } else if (token) {
-//                     return res.status(200).json({
-//                         message: 'Auth Successful',
-//                         token,
-//                         user: users[0]
-//                     });
-//                 }
-//             });
-//         }
-//     });
-// }
-// function generateAccessToken(username,password) {
-//     const tokenSecret = '1234abc';
-//     return jwt.sign({username,password},tokenSecret, { expiresIn: '31556926s' });
-// }
 var Login = function (req, res) { return __awaiter(void 0, void 0, void 0, function () {
-    var userData, users, foundUser, token;
+    var userData, users, userPassword, findUser, findUserRole, dbPassword, matchPassword, token;
     return __generator(this, function (_a) {
         switch (_a.label) {
             case 0:
@@ -186,30 +175,37 @@ var Login = function (req, res) { return __awaiter(void 0, void 0, void 0, funct
                 return [4 /*yield*/, new UserModel_1.UserModel().getUsers()];
             case 1:
                 users = _a.sent();
-                foundUser = users.find(function (user) { return user.username == userData.username || user.password == userData.password; });
-                if (!foundUser) {
+                userPassword = userData.password;
+                findUser = users.find(function (user) { return user.username == userData.username; });
+                findUserRole = findUser.role;
+                dbPassword = findUser.password;
+                return [4 /*yield*/, bcrypt.compare(userPassword, dbPassword)];
+            case 2:
+                matchPassword = _a.sent();
+                if (!findUser) {
                     return [2 /*return*/, res.send({
                             status: 400,
                             message: "No such user"
                         })];
                 }
-                if (foundUser && foundUser.username != userData.username) {
+                if (findUser && findUser.username != userData.username) {
                     return [2 /*return*/, res.send({
                             status: 400,
                             message: "Incorrect username"
                         })];
                 }
-                if (foundUser && foundUser.password != userData.password) {
+                if (!matchPassword) {
                     return [2 /*return*/, res.send({
                             status: 400,
                             message: "Incorrect password"
                         })];
                 }
-                token = jwt.sign({ foundUser: foundUser }, 'abc123', { expiresIn: '31556926s' });
+                token = jwt.sign({ findUser: findUser }, 'abc123', { expiresIn: '31556926s' });
                 //res.send({token})
                 res.send({
-                    User: foundUser.username,
-                    Authtoken: token
+                    User: findUser.username,
+                    Authtoken: token,
+                    Role: findUserRole
                 });
                 return [2 /*return*/];
         }

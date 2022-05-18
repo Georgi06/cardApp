@@ -30,6 +30,7 @@ export class CardModel {
     async createCard(cardDataInput: Card): Promise<boolean>{
         const insertDataObject = [
             cardDataInput.card_number,
+            cardDataInput.holder_username,
             cardDataInput.holder_first_name,
             cardDataInput.holder_last_name,
             cardDataInput.valid_date,
@@ -37,7 +38,7 @@ export class CardModel {
         ]
 
         console.log(insertDataObject)
-        await this.conn.execute("INSERT INTO cards (card_number, holder_first_name, holder_last_name, valid_date, cvv2 ) VALUES (?,?,?,?,?)", insertDataObject)
+        await this.conn.execute("INSERT INTO cards (card_number, holder_username, holder_first_name, holder_last_name, valid_date, cvv2 ) VALUES (?,?,?,?,?,?)", insertDataObject)
 
         return true;
     }
@@ -62,6 +63,12 @@ export class CardModel {
         await this.conn.execute("DELETE FROM cards WHERE id = ?", [id])
 
         return true;
+    }
+
+    async getLoggedUserCard(username: string): Promise<Card[]> {
+       const [rows] = await this.conn.execute("SELECT * FROM cards WHERE holder_username = ?", [username])
+
+        return rows;
     }
 
 

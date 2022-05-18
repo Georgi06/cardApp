@@ -4,9 +4,6 @@ import {User} from "../types/User";
 import {UserDataInput} from "../types/UserDataInput";
 import {UpdateUserData} from "../types/UpdateUserData";
 import {LoginData} from "../types/LoginData";
-import {hash} from 'bcrypt' ;
-import  {extractJWT} from "../extractJWT";
-import {signJWT} from "../signJwt";
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
 
@@ -16,7 +13,6 @@ const saltRounds = 10;
     //create
     export const createUser= async (req: Request, res: Response) => {
     let userData: UserDataInput = req.body;
-        console.log(userData);
 
         if (!userData.username) {
             return res.send({
@@ -32,7 +28,9 @@ const saltRounds = 10;
         }
 
         const userModel = new UserModel();
-        await userModel.createUser(userData);
+
+        await userModel.createHashUser(userData);
+
         res.send({
         status: 200,
         message: "User created"
@@ -67,88 +65,78 @@ const saltRounds = 10;
             message: `User with id:${id} updated`
         })
     }
-
-    //delete
-    export const deleteUser = async (req: Request, res: Response)=> {
-        let id = Number(req.params.id);
+    export const updatePassword= async (req: Request, res: Response) => {
+        let username = req.params.username;
+        let updateUserData: UpdateUserData = req.body;
         const userModel = new UserModel();
-        await userModel.deleteUser(id);
+        await userModel.updatePassword(username, updateUserData);
+        console.log(username)
 
         res.send({
             status: 200,
-            message: `User with id: ${id} was deleted`
+            message: `User with username:${username} updated`
         })
     }
 
 
-    // export const LoginToken = async (req:Request,res:Response) => {
-    //     let { username, password } = req.body;
-    //     let users: User[] = await new UserModel().getUsers();
-    //
-    //     bcrypt.compare(password, users[0].password, (error, result) => {
-    //         if (error) {
-    //             return res.status(401).json({
-    //                 message: 'Password Mismatch'
-    //             });
-    //         } else if (result) {
-    //             signJWT(users[0], (_error, token) => {
-    //                 if (_error) {
-    //                     return res.status(401).json({
-    //                         message: 'Unable to Sign JWT',
-    //                         error: _error
-    //                     });
-    //                 } else if (token) {
-    //                     return res.status(200).json({
-    //                         message: 'Auth Successful',
-    //                         token,
-    //                         user: users[0]
-    //                     });
-    //                 }
-    //             });
-    //         }
-    //     });
-    // }
+    //delete
+    export const deleteUser = async (req: Request, res: Response)=> {
+        let username = req.params.username;
+        const userModel = new UserModel();
+        await userModel.deleteUser(username);
 
-    // function generateAccessToken(username,password) {
-    //     const tokenSecret = '1234abc';
-    //     return jwt.sign({username,password},tokenSecret, { expiresIn: '31556926s' });
-    // }
+
+            res.send({
+                status: 200,
+                message: `User with username:${username} was deleted`
+            })
+
+    }
 
 
     export const Login = async (req: Request, res: Response) => {
         let userData: LoginData = req.body;
-
         let users: User[] = await new UserModel().getUsers();
-        //users.forEach(item => obj[item.username] = item.password);
+        let userPassword = userData.password;
 
-        const foundUser = users.find(user => user.username == userData.username || user.password == userData.password)
 
-        if(!foundUser) {
+
+        const findUser = users.find(user => user.username == userData.username);
+        const findUserRole = findUser.role;
+        const dbPassword = findUser.password;
+        const matchPassword = await bcrypt.compare(userPassword,dbPassword);
+
+
+        if(!findUser) {
             return res.send({
                 status: 400,
                 message: "No such user"
             })
         }
 
-        if (foundUser && foundUser.username != userData.username) {
+        if (findUser && findUser.username != userData.username) {
             return res.send({
                 status: 400,
                 message: "Incorrect username"
             })
         }
-        if (foundUser && foundUser.password != userData.password) {
+
+        if(!matchPassword){
             return res.send({
                 status: 400,
                 message: "Incorrect password"
             })
         }
-        let token = jwt.sign({foundUser}, 'abc123',{ expiresIn: '31556926s' });
+
+
+        let token = jwt.sign({findUser}, 'abc123',{ expiresIn: '31556926s' });
 
         //res.send({token})
 
         res.send({
-            User: foundUser.username,
-            Authtoken: token
+            User: findUser.username,
+            Authtoken: token,
+            Role: findUserRole
         })
 
     }

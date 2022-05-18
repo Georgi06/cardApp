@@ -11,6 +11,14 @@ const saltRounds = 10;
 export const createCard= async (req: Request, res: Response) => {
     let CardData: Card = req.body;
 
+
+    if (!CardData.card_number) {
+        return res.send({
+            status: 400,
+            message: "Invalid Card Data"
+        })
+    }
+
     const newCard = new CardModel();
     await newCard.createCard(CardData);
 
@@ -32,6 +40,13 @@ export const getCard = async (req: Request, res: Response) => {
     let card: Card[] = await new CardModel().findCard(id);
     console.log(card);
     res.send(card);
+
+}
+export const getUserCard = async (req: Request, res: Response) => {
+    let username = req.params.username;
+    let userCard = await new CardModel().getLoggedUserCard(username);
+
+    res.send(userCard);
 
 }
 

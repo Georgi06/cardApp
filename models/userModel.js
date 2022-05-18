@@ -57,32 +57,6 @@ var UserModel = /** @class */ (function () {
             });
         });
     };
-    UserModel.prototype.getLoginUsername = function () {
-        return __awaiter(this, void 0, void 0, function () {
-            var username;
-            return __generator(this, function (_a) {
-                switch (_a.label) {
-                    case 0: return [4 /*yield*/, this.conn.query("SELECT username FROM users")];
-                    case 1:
-                        username = _a.sent();
-                        return [2 /*return*/, username];
-                }
-            });
-        });
-    };
-    UserModel.prototype.getLoginPassword = function () {
-        return __awaiter(this, void 0, void 0, function () {
-            var password;
-            return __generator(this, function (_a) {
-                switch (_a.label) {
-                    case 0: return [4 /*yield*/, this.conn.query("SELECT password FROM users")];
-                    case 1:
-                        password = _a.sent();
-                        return [2 /*return*/, password];
-                }
-            });
-        });
-    };
     UserModel.prototype.findUser = function (id) {
         return __awaiter(this, void 0, void 0, function () {
             var rows;
@@ -92,20 +66,31 @@ var UserModel = /** @class */ (function () {
             });
         });
     };
+    UserModel.prototype.getUserCard = function (id) {
+        return __awaiter(this, void 0, void 0, function () {
+            var rows;
+            return __generator(this, function (_a) {
+                rows = this.conn.execute("SELECT * FROM users JOIN cards ON users.first_name = cards.holder_first_name", [id])[0];
+                return [2 /*return*/, rows];
+            });
+        });
+    };
     UserModel.prototype.createUser = function (userDataInput) {
         return __awaiter(this, void 0, void 0, function () {
-            var insertDataObject;
+            var userRole, insertDataObject;
             return __generator(this, function (_a) {
                 switch (_a.label) {
                     case 0:
+                        userRole = 2;
                         insertDataObject = [
                             userDataInput.username,
                             userDataInput.password,
                             (userDataInput.email) ? userDataInput.email : null,
                             (userDataInput.first_name) ? userDataInput.first_name : null,
-                            (userDataInput.last_name) ? userDataInput.last_name : null
+                            (userDataInput.last_name) ? userDataInput.last_name : null,
+                            (userRole) ? userRole : null
                         ];
-                        return [4 /*yield*/, this.conn.execute("INSERT INTO users (username, password, email, first_name, last_name ) VALUES (?,?,?,?,?)", insertDataObject)];
+                        return [4 /*yield*/, this.conn.execute("INSERT INTO users (username, password, email, first_name, last_name, role) VALUES (?,?,?,?,?,?)", insertDataObject)];
                     case 1:
                         _a.sent();
                         return [2 /*return*/, true];
@@ -113,37 +98,35 @@ var UserModel = /** @class */ (function () {
             });
         });
     };
-    UserModel.prototype.createHashUser = function (req, res, userDataInput) {
+    UserModel.prototype.createHashUser = function (userDataInput) {
         return __awaiter(this, void 0, void 0, function () {
-            var passwordForHash, insertDataObject;
+            var userRole, passwordForHash, salt, hashedPass, insertDataObject;
             return __generator(this, function (_a) {
                 switch (_a.label) {
                     case 0:
-                        passwordForHash = userDataInput.password;
-                        bcrypt.hash(passwordForHash, 10, function (hashError, hash) {
-                            if (hashError) {
-                                return res.status(401).json({
-                                    message: hashError.message,
-                                    error: hashError
-                                });
-                            }
-                        });
+                        userRole = 2;
+                        passwordForHash = userDataInput.password.toString();
+                        salt = bcrypt.genSalt(10);
+                        return [4 /*yield*/, bcrypt.hash(passwordForHash, parseInt(salt))];
+                    case 1:
+                        hashedPass = _a.sent();
                         insertDataObject = [
                             userDataInput.username,
-                            userDataInput.password,
+                            hashedPass,
                             (userDataInput.email) ? userDataInput.email : null,
                             (userDataInput.first_name) ? userDataInput.first_name : null,
-                            (userDataInput.last_name) ? userDataInput.last_name : null
+                            (userDataInput.last_name) ? userDataInput.last_name : null,
+                            (userRole) ? userRole : null
                         ];
-                        return [4 /*yield*/, this.conn.execute("INSERT INTO users (username, password, email, first_name, last_name ) VALUES (?,hash,?,?,?)", insertDataObject)];
-                    case 1:
+                        console.log(insertDataObject);
+                        return [4 /*yield*/, this.conn.execute("INSERT INTO users (username, password, email, first_name, last_name, role) VALUES (?,?,?,?,?,?)", insertDataObject)];
+                    case 2:
                         _a.sent();
-                        return [2 /*return*/];
+                        return [2 /*return*/, true];
                 }
             });
         });
     };
-    ;
     UserModel.prototype.updateUser = function (id, updateUserData) {
         return __awaiter(this, void 0, void 0, function () {
             var updateUserDataArray, setStatement, preparedStatementData, i;
@@ -168,11 +151,30 @@ var UserModel = /** @class */ (function () {
             });
         });
     };
-    UserModel.prototype.deleteUser = function (id) {
+    UserModel.prototype.updatePassword = function (username, updateUserData) {
+        return __awaiter(this, void 0, void 0, function () {
+            var passwordForHash, salt, hashedPass;
+            return __generator(this, function (_a) {
+                switch (_a.label) {
+                    case 0:
+                        passwordForHash = updateUserData.password.toString();
+                        salt = bcrypt.genSalt(10);
+                        return [4 /*yield*/, bcrypt.hash(passwordForHash, parseInt(salt))];
+                    case 1:
+                        hashedPass = _a.sent();
+                        return [4 /*yield*/, this.conn.execute("UPDATE users SET password = '".concat(hashedPass, "' WHERE users.username = '").concat(username, "'"))];
+                    case 2:
+                        _a.sent();
+                        return [2 /*return*/, true];
+                }
+            });
+        });
+    };
+    UserModel.prototype.deleteUser = function (username) {
         return __awaiter(this, void 0, void 0, function () {
             return __generator(this, function (_a) {
                 switch (_a.label) {
-                    case 0: return [4 /*yield*/, this.conn.execute("DELETE FROM users WHERE id = ?", [id])];
+                    case 0: return [4 /*yield*/, this.conn.execute("DELETE FROM users WHERE username = ?", [username])];
                     case 1:
                         _a.sent();
                         return [2 /*return*/, true];
